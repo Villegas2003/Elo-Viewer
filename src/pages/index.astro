@@ -1,6 +1,6 @@
 ---
-// Importamos el preset — Astro lo procesa en build time
-import preset from '../data/preset.json';
+import presetData from '../data/preset.json';
+const presetString = JSON.stringify(presetData);
 ---
 <!DOCTYPE html>
 <html lang="es">
@@ -257,11 +257,11 @@ import preset from '../data/preset.json';
   Las funciones aquí son globales al documento (no module scope).
   NO se usan onclick="..." en el HTML — todo vía addEventListener.
 -->
-<script define:vars={{ preset }}>
+<script define:vars={{ presetString }}>
 // ══════════════════════════════════════════
 // DATOS DEL TORNEO PRECARGADO (inyectado por Astro build-time)
 // ══════════════════════════════════════════
-const PRESET = preset; // objeto JSON, serializado por Astro via define:vars
+const PRESET = JSON.parse(presetString); // presetString inyectado por Astro como string seguro
 
 // ══════════════════════════════════════════
 // PARSER TUNX (Swiss-Manager binary format)
