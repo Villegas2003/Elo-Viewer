@@ -909,6 +909,18 @@ const presetString = JSON.stringify(presetData);
       .stats-row .sx strong { font-size: 13px; }
       .round-tabs button { padding: 5px 9px; font-size: 11px; }
       .view-tabs button { padding: 8px 11px; font-size: 12px; }
+      .set-grid { grid-template-columns: 1fr; }
+      .page-meta { gap: 6px; }
+      .page-meta .btn { padding: 5px 10px; font-size: 11px; }
+      tr.mine .mine-badge { display: none; }
+      [data-tip]::after { font-size: 10px; max-width: min(220px, 80vw); }
+      .ico-link { width: 18px; height: 18px; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { padding: 6px 8px; }
+      .stats-row .sx { font-size: 10px; padding: 2px 6px; }
+      .stats-row .sx strong { font-size: 12px; }
+      .view-tabs button { padding: 7px 9px; font-size: 11px; }
     }
   </style>
 </head>
@@ -1040,7 +1052,7 @@ const presetString = JSON.stringify(presetData);
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span class="lbl">Nuevo torneo</span>
     </button>
-    <div class="sb-foot">Chess Elo Manager v2.2</div>
+    <div class="sb-foot">Chess Elo Manager v3.0</div>
   </nav>
 
   <div class="main">
@@ -1408,7 +1420,8 @@ function gameDetail(p, allP, K) {
     +'<div style="overflow-x:auto"><table class="gtbl">'
     +'<thead><tr><th class="c">Rd</th><th>Oponente</th><th class="c">Fed</th>'
     +'<th class="c">Rating</th><th class="c">Color</th><th class="c">Resultado</th>'
-    +'<th class="r">Expected</th><th class="r">Impacto K×(R−E)</th></tr></thead>'
+    +'<th class="r"><span data-tip="Probabilidad esperada de ganar según ratings: 1 / (1 + 10^((R_oponente − R_tuyo)/400))">Expected</span></th>'
+    +'<th class="r"><span data-tip="Cambio de Elo por esta partida: K × (resultado real − resultado esperado)">Impacto K×(R−E)</span></th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>'
     +'<div class="gs"><span style="color:var(--text-muted)">Suma de impactos = ΔRating total</span>'
     +'<strong style="color:'+tc+'">Σ = '+ts+'</strong></div>';
@@ -1420,23 +1433,38 @@ function pRows(list, pfx) {
   var hasTeam = list.some(function(p){return p.team;});
   return list.map(function(p,i){
     var id = pfx+i;
+    var mine = isMyPlayer(p) || isMyTeam(p);
+    var mineBadgeHtml = '';
+    if (isMyPlayer(p)) mineBadgeHtml = '<span class="mine-badge" title="Mi jugador">Yo</span>';
+    else if (isMyTeam(p)) mineBadgeHtml = '<span class="mine-badge" title="Mi equipo" style="background:#9333ea">Equipo</span>';
     var cols = (hasCat ? '<td class="c">'+badge('badge-cat', p.tCat||'—')+'</td>' : '');
     var teamCol = hasTeam ? '<td>'+(p.team?'<span class="badge badge-info">'+escapeHtml(p.team)+'</span>':'<span style="color:var(--text-subtle)">—</span>')+'</td>' : '';
     var ratingStr = p.g > 0 ? p.g : '<span style="color:var(--text-subtle)">—</span>';
     var deltaStr = p.g > 0 ? deltaBadge(p.delta) : '<span style="color:var(--text-subtle)">—</span>';
     var finalStr = p.g > 0 ? '<strong>'+Math.round(p.g+p.delta)+'</strong>' : '<span style="color:var(--text-subtle)">—</span>';
+    // FIDE link: lookup en torneo origen
+    var fideLink = '';
+    var tnObj = ST.tournaments.filter(function(x){return x.id===p.tId;})[0];
+    if (tnObj) {
+      var plRec = tnObj.players[p.rank] || tnObj.players[String(p.rank)];
+      if (plRec && plRec.fideId) {
+        fideLink = '<a href="https://ratings.fide.com/profile/'+encodeURIComponent(plRec.fideId)+'" target="_blank" rel="noopener" class="ico-link" title="Ver perfil FIDE" onclick="event.stopPropagation()">'
+          +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+          +'</a>';
+      }
+    }
     var colCount = 8 + (hasCat?1:0) + (hasTeam?1:0);
-    return '<tr class="trow" data-rowid="'+id+'" aria-expanded="false" tabindex="0">'
+    return '<tr class="trow'+(mine?' mine':'')+'" data-rowid="'+id+'" aria-expanded="false" tabindex="0">'
       +'<td>'+arrowSvg()+p.rank+'</td>'
-      +'<td>'+(p.t?'<span class="badge badge-title" style="margin-right:6px">'+escapeHtml(p.t)+'</span>':'')+'<strong>'+escapeHtml(p.n)+'</strong>'+(p.pCat?'<span class="badge badge-cat" style="margin-left:6px;font-size:10px">'+escapeHtml(p.pCat)+'</span>':'')+'</td>'
+      +'<td>'+(p.t?'<span class="badge badge-title" style="margin-right:6px">'+escapeHtml(p.t)+'</span>':'')+'<strong>'+escapeHtml(p.n)+'</strong>'+fideLink+mineBadgeHtml+(p.pCat?'<span class="badge badge-cat" style="margin-left:6px;font-size:10px">'+escapeHtml(p.pCat)+'</span>':'')+'</td>'
       +'<td class="c">'+badge('badge-fed', p.f)+'</td>'
       +teamCol
       +cols
       +'<td class="r">'+ratingStr+'</td>'
       +'<td class="r">'+deltaStr+'</td>'
       +'<td class="r">'+finalStr+'</td>'
-      +'<td class="c">'+p.pts+'/'+p.games.length+'</td>'
-      +'<td class="c">'+p.K+'</td>'
+      +'<td class="c" data-tip="Puntos / Rondas (W=1, D=½, L=0)">'+p.pts+'/'+p.games.length+'</td>'
+      +'<td class="c" data-tip="K factor FIDE — coeficiente que multiplica (resultado − esperado) para calcular ΔElo">'+p.K+'</td>'
       +'</tr>'
       +'<tr class="gtr" id="gr-'+id+'">'
       +'<td colspan="'+colCount+'" class="gcell">'+gameDetail(p, p.tP, p.K)+'</td>'
@@ -1701,8 +1729,9 @@ function updateFilters() {
   ST.tournaments.forEach(function(t){if(t.category&&!catsSeen[t.category]){cats.push(t.category);catsSeen[t.category]=1;}});
   cats.sort();
   var fs=document.getElementById('f-fed'), pf=fs.value;
+  var defFed = SETTINGS.defaultFed || '';
   fs.innerHTML='<option value="">Todos los países</option>'+feds.map(function(f){
-    return '<option value="'+f+'"'+(f===pf||(pf===''&&f==='CRC')?' selected':'')+'>'+f+'</option>';
+    return '<option value="'+f+'"'+(f===pf||(pf===''&&f===defFed)?' selected':'')+'>'+f+'</option>';
   }).join('');
   var cs=document.getElementById('f-cat');
   cs.innerHTML='<option value="">Todas las categorías</option>'+cats.map(function(c){
@@ -1820,8 +1849,8 @@ function renderPlayers() {
     +'<thead><tr><th>#</th><th>Jugador</th><th class="c">Fed</th>'
     +(list.some(function(p){return p.team;})?'<th>Equipo</th>':'')
     +'<th class="c">Cat</th>'
-    +'<th class="r">Rating</th><th class="r">ΔElo</th><th class="r">Rating Final</th>'
-    +'<th class="c">Pts/Rd</th><th class="c">K</th></tr></thead>'
+    +'<th class="r">Rating</th><th class="r"><span data-tip="Cambio de Elo total: suma de K×(R−E)">ΔElo</span></th><th class="r">Rating Final</th>'
+    +'<th class="c"><span data-tip="Puntos / Rondas (W=1, D=½, L=0)">Pts/Rd</span></th><th class="c"><span data-tip="K factor FIDE">K</span></th></tr></thead>'
     +'<tbody>'+pRows(list,'p')+'</tbody>'
     +'</table></div></div>';
   var ctx=document.getElementById('pc1');
@@ -1906,9 +1935,11 @@ function renderTeamSection(td) {
     var resStr = s.w + 'W · ' + s.d + 'D · ' + s.l + 'L';
     var badgeCls = idx === 0 ? 'badge-pos' : (idx < 3 ? 'badge-cat' : 'badge-info');
     var teamLower = (s.team || '').toLowerCase();
-    return '<tr class="team-row" data-team="'+escapeHtml(teamLower)+'">'
+    var mine = isMyTeam({team: s.team});
+    var mineHtml = mine ? '<span class="mine-badge" title="Mi equipo">Mío</span>' : '';
+    return '<tr class="team-row'+(mine?' mine':'')+'" data-team="'+escapeHtml(teamLower)+'">'
       +'<td><span class="badge '+badgeCls+'">'+(idx+1)+'</span></td>'
-      +'<td><strong>'+escapeHtml(s.team)+'</strong></td>'
+      +'<td><strong>'+escapeHtml(s.team)+'</strong>'+mineHtml+'</td>'
       +'<td class="r">'+s.mp+'</td>'
       +'<td class="r">'+s.bp.toFixed(1)+'</td>'
       +'<td class="c">'+s.games+'</td>'
@@ -1940,7 +1971,7 @@ function renderTeamSection(td) {
     +'<input type="search" id="team-search" placeholder="Buscar mi equipo…" aria-label="Buscar equipo" style="'+searchInputStyle+'" />'
     +'<span class="cnt" id="team-count">'+td.standings.length+' equipos</span></div>'
     +'<div class="tbl-sc"><table>'
-    +'<thead><tr><th>#</th><th>Equipo</th><th class="r">MP</th><th class="r">BP</th><th class="c">Matches</th><th class="c">W·D·L</th></tr></thead>'
+    +'<thead><tr><th>#</th><th>Equipo</th><th class="r"><span data-tip="Match Points: 2 por match ganado, 1 por empate, 0 por perdido">MP</span></th><th class="r"><span data-tip="Board Points: suma de puntos individuales en tableros (W=1, D=½, L=0)">BP</span></th><th class="c">Matches</th><th class="c">W·D·L</th></tr></thead>'
     +'<tbody id="team-tbody">'+standingsRows+'</tbody></table></div></div>'
     +'<div class="sect-h"><h3>Matches equipo vs equipo</h3><span class="cnt">'+td.matches.length+' totales</span></div>'
     +'<div class="tbl-card">'
@@ -1970,35 +2001,88 @@ function renderTournament(tid) {
   if (t.source === 'chess-results') {
     var ageMin = t.lastFetch ? Math.round((Date.now() - t.lastFetch) / 60000) : null;
     var ageStr = ageMin === null ? '' : ageMin < 1 ? 'recién' : ageMin === 1 ? 'hace 1 min' : 'hace ' + ageMin + ' min';
+    var crUrl = 'https://chess-results.com/tnr' + t.crTnr + '.aspx';
     liveBadge = '<span class="live-badge" style="margin-left:auto">Live · chess-results</span>'
+      + '<a href="'+crUrl+'" target="_blank" rel="noopener" class="btn btn-g" style="padding:6px 12px;font-size:12px;text-decoration:none" title="Abrir en chess-results.com">'
+      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+      + 'Ver original</a>'
       + '<button class="btn btn-g" id="cr-refresh" style="padding:6px 12px;font-size:12px" title="Refrescar desde chess-results">'
       + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>'
       + 'Actualizar <span style="color:var(--text-subtle);font-weight:400">· ' + ageStr + '</span></button>';
   }
-  // Botón Renombrar (siempre disponible)
-  var renameBtn = '<button class="btn btn-g" id="t-rename" style="padding:6px 12px;font-size:12px'
-    + (t.source !== 'chess-results' ? ';margin-left:auto' : '') + '" title="Renombrar torneo">'
+  // Botones acción: Export CSV, Renombrar, Eliminar
+  var actionsBtns = ''
+    + '<button class="btn btn-g" id="t-export" style="padding:6px 12px;font-size:12px'
+    + (t.source !== 'chess-results' ? ';margin-left:auto' : '') + '" title="Exportar a CSV">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
+    + 'CSV</button>'
+    + '<button class="btn btn-g" id="t-rename" style="padding:6px 12px;font-size:12px" title="Renombrar torneo">'
     + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
-    + 'Renombrar</button>';
+    + 'Renombrar</button>'
+    + '<button class="btn btn-g" id="t-del" style="padding:6px 12px;font-size:12px;color:var(--negative)" title="Eliminar torneo">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
+    + 'Eliminar</button>';
 
-  el.innerHTML='<div class="page-meta" style="align-items:center">'
+  // Banner "Mi jugador / Mi equipo" si está fijado y aparece en este torneo
+  var mineBanner = '';
+  if (SETTINGS.myPlayer || (isTeams && SETTINGS.myTeam)) {
+    var myP = SETTINGS.myPlayer ? all.filter(function(p){return isMyPlayer(p);}) : [];
+    var myT = (isTeams && SETTINGS.myTeam && teamData)
+      ? teamData.standings.filter(function(s){return s.team.toLowerCase()===SETTINGS.myTeam.toLowerCase();})[0]
+      : null;
+    var parts = [];
+    if (myP.length) {
+      var mp = myP[0];
+      var sign = mp.delta > 0 ? '+' : '';
+      parts.push('<span><strong>'+escapeHtml(mp.n)+'</strong> · ΔElo <strong class="'+(mp.delta>=0?'pos':'neg')+'">'+sign+mp.delta.toFixed(1)+'</strong> · '+mp.pts+'/'+mp.games.length+' pts</span>');
+    }
+    if (myT) {
+      var idx = teamData.standings.indexOf(myT) + 1;
+      parts.push('<span>Equipo <strong>'+escapeHtml(myT.team)+'</strong> · #'+idx+' · '+myT.mp+' MP · '+myT.bp.toFixed(1)+' BP</span>');
+    }
+    if (parts.length) {
+      mineBanner = '<div style="display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;margin-bottom:14px;font-size:13px;color:var(--text-strong);flex-wrap:wrap">'
+        + '<span class="mine-badge">Mío</span>'
+        + parts.join('<span style="color:var(--text-subtle)">·</span>')
+        + '</div>';
+    }
+  }
+
+  // Detectar número de rondas únicas vistas en games
+  var nRoundsTotal = 0;
+  all.forEach(function(p){ p.games.forEach(function(g){ if (g.round && g.round > nRoundsTotal) nRoundsTotal = g.round; }); });
+  if (!nRoundsTotal) nRoundsTotal = all[0] ? all[0].games.length : 0;
+
+  el.innerHTML='<div class="page-meta" style="align-items:center;flex-wrap:wrap;gap:8px">'
     +typeLabel
     +(t.category?badge('badge-cat',t.category):'')+(t.year?badge('badge-info',t.year):'')+(t.location?badge('badge-info',t.location):'')
     +liveBadge
-    +renameBtn
+    +actionsBtns
     +'</div>'
-    +'<div class="stats">'
-    +(isTeams?'<div class="stat"><div class="sl">Equipos</div><div class="sv">'+nTeams+'</div></div>':'')
-    +'<div class="stat"><div class="sl">Jugadores</div><div class="sv">'+all.length+'</div></div>'
-    +'<div class="stat"><div class="sl">Países</div><div class="sv">'+feds.length+'</div></div>'
-    +(isTeams?'':'<div class="stat"><div class="sl">ΔElo Promedio</div><div class="sv '+(avg>=0?'pos':'neg')+'">'+(avg>=0?'+':'')+avg.toFixed(1)+'</div></div>')
-    +'<div class="stat"><div class="sl">Rondas</div><div class="sv">'+(all[0]?all[0].games.length:'—')+'</div></div>'
+    +mineBanner
+    +'<div class="stats-row">'
+    +(isTeams?'<span class="sx"><strong>'+nTeams+'</strong>Equipos</span>':'')
+    +'<span class="sx"><strong>'+all.length+'</strong>Jugadores</span>'
+    +'<span class="sx"><strong>'+feds.length+'</strong>Países</span>'
+    +'<span class="sx"><strong>'+nRoundsTotal+'</strong>Rondas</span>'
+    +(isTeams?'':'<span class="sx '+(avg>=0?'pos':'neg')+'"><strong>'+(avg>=0?'+':'')+avg.toFixed(1)+'</strong>ΔElo prom.</span>')
     +'</div>'
-    +(isTeams && teamData ? renderTeamSection(teamData) : '')
+    +'<div class="view-tabs" role="tablist">'
+      +'<button class="vw-tab active" data-view="players" role="tab" aria-selected="true">Jugadores</button>'
+      +(isTeams?'<button class="vw-tab" data-view="teams" role="tab" aria-selected="false">Equipos</button>':'')
+      +'<button class="vw-tab" data-view="rounds" role="tab" aria-selected="false">Por ronda</button>'
+    +'</div>'
+    +'<div id="vw-pane-players">'
+    // pane jugadores se llena más abajo
+    +'</div>'
+    +(isTeams && teamData ? '<div id="vw-pane-teams" style="display:none">'+renderTeamSection(teamData)+'</div>' : '')
+    +'<div id="vw-pane-rounds" style="display:none"></div>';
+  // Layout filtros + tabla jugadores dentro del pane "players"
+  document.getElementById('vw-pane-players').innerHTML = ''
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center">'
     +'<input type="search" id="tf-search" placeholder="Buscar jugador…" aria-label="Buscar jugador" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);min-width:200px;flex:1 1 200px;max-width:320px" />'
     +'<select id="tf-fed" aria-label="Filtrar por federación"><option value="">Todos los países</option>'
-    +feds.map(function(f){return '<option value="'+f+'"'+(f==='CRC'?' selected':'')+'>'+f+'</option>';}).join('')
+    +feds.map(function(f){return '<option value="'+f+'"'+(SETTINGS.defaultFed && f===SETTINGS.defaultFed?' selected':'')+'>'+f+'</option>';}).join('')
     +'</select>'
     +(isTeams && t.teams && t.teams.length ?
       '<select id="tf-team" aria-label="Filtrar por equipo"><option value="">Todos los equipos</option>'
@@ -2012,8 +2096,8 @@ function renderTournament(tid) {
     +'<div class="tbl-sc"><table>'
     +'<thead><tr><th>#</th><th>Jugador</th><th class="c">Fed</th>'
     +(isTeams?'<th>Equipo</th>':'')
-    +'<th class="r">Rating</th><th class="r">ΔElo</th><th class="r">Rating Final</th>'
-    +'<th class="c">Pts/Rd</th><th class="c">K</th></tr></thead>'
+    +'<th class="r">Rating</th><th class="r"><span data-tip="Cambio de Elo total: suma de K×(R−E) en todas las partidas">ΔElo</span></th><th class="r">Rating Final</th>'
+    +'<th class="c"><span data-tip="Puntos / Rondas jugadas (W=1, D=½, L=0)">Pts/Rd</span></th><th class="c"><span data-tip="K factor FIDE: 20 default, 40 si <18 con rating <2300, 10 si ≥2400">K</span></th></tr></thead>'
     +'<tbody id="t-tbody"></tbody></table></div></div>';
 
   document.getElementById('tf-fed').addEventListener('change',function(){renderTT(tid);});
@@ -2055,7 +2139,140 @@ function renderTournament(tid) {
   if (refreshBtn) refreshBtn.addEventListener('click', function(){ manualRefreshCR(tid); });
   var renameBtnEl = document.getElementById('t-rename');
   if (renameBtnEl) renameBtnEl.addEventListener('click', function(){ renameTournament(tid); });
+  var delBtnEl = document.getElementById('t-del');
+  if (delBtnEl) delBtnEl.addEventListener('click', function(){ delT(tid); });
+  var expBtnEl = document.getElementById('t-export');
+  if (expBtnEl) expBtnEl.addEventListener('click', function(){ exportTournamentCSV(tid); });
+
+  // View tabs (Jugadores / Equipos / Por ronda)
+  var vwTabs = document.querySelectorAll('.vw-tab');
+  vwTabs.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var v = btn.dataset.view;
+      vwTabs.forEach(function(b){ b.classList.toggle('active', b===btn); b.setAttribute('aria-selected', b===btn ? 'true' : 'false'); });
+      ['players','teams','rounds'].forEach(function(name){
+        var p = document.getElementById('vw-pane-'+name);
+        if (p) p.style.display = (name===v) ? '' : 'none';
+      });
+      if (v === 'rounds') renderRoundsView(tid);
+    });
+  });
+
   renderTT(tid);
+}
+
+// ═══════════════ EXPORT CSV ═══════════════
+function csvEscape(v) {
+  if (v == null) return '';
+  var s = String(v);
+  if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0) {
+    s = '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+function downloadFile(filename, content, mime) {
+  var blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function exportTournamentCSV(tid) {
+  var t = ST.tournaments.filter(function(x){return x.id===tid;})[0];
+  if (!t) return;
+  var list = getPlayers([tid]);
+  list.sort(function(a,b){return b.delta-a.delta;});
+  var isTeams = t.kind === 'teams';
+  var headers = ['Rank', 'Jugador', 'Título', 'Fed', 'Rating Inicial', 'ΔElo', 'Rating Final', 'Puntos', 'Partidas', 'K'];
+  if (isTeams) headers.splice(4, 0, 'Equipo');
+  if (t.crTnr) headers.push('FIDE ID');
+  var rows = list.map(function(p){
+    var r = [p.rank, p.n, p.t || '', p.f || '', p.g, p.delta.toFixed(1), p.g > 0 ? Math.round(p.g + p.delta) : '', p.pts, p.games.length, p.K];
+    if (isTeams) r.splice(4, 0, p.team || '');
+    if (t.crTnr) {
+      var pl = t.players[p.rank] || t.players[String(p.rank)];
+      r.push(pl ? (pl.fideId || '') : '');
+    }
+    return r.map(csvEscape).join(',');
+  });
+  var csv = headers.map(csvEscape).join(',') + '\n' + rows.join('\n');
+  var safe = (t.name || 'torneo').replace(/[^a-zA-Z0-9-]+/g, '_').slice(0, 60);
+  downloadFile(safe + '.csv', csv, 'text/csv;charset=utf-8');
+  toast('success', 'CSV exportado');
+}
+
+// ═══════════════ VISTA POR RONDA ═══════════════
+function renderRoundsView(tid) {
+  var t = ST.tournaments.filter(function(x){return x.id===tid;})[0];
+  if (!t) return;
+  var pane = document.getElementById('vw-pane-rounds');
+  if (!pane) return;
+
+  // Recolectar games por ronda
+  var byRound = {};
+  var maxR = 0;
+  Object.keys(t.games).forEach(function(rk){
+    (t.games[rk] || []).forEach(function(g){
+      if (g.c !== 'w') return;  // contar cada partida una sola vez
+      var r = g.round || 0;
+      if (!byRound[r]) byRound[r] = [];
+      byRound[r].push({ w: +rk, b: g.o, res: g.r });
+      if (r > maxR) maxR = r;
+    });
+  });
+  var rounds = Object.keys(byRound).map(function(r){return +r;}).sort(function(a,b){return a-b;});
+  if (!rounds.length) {
+    pane.innerHTML = '<div class="empty"><h3>Sin partidas por ronda</h3><p>Este torneo no tiene información de rondas disponible.</p></div>';
+    return;
+  }
+
+  var curR = parseInt(pane.dataset.curR || rounds[rounds.length-1], 10);
+  if (rounds.indexOf(curR) < 0) curR = rounds[rounds.length-1];
+  pane.dataset.curR = String(curR);
+
+  var tabsHtml = '<div class="round-tabs">' + rounds.map(function(r){
+    var n = (byRound[r] || []).length;
+    return '<button data-r="'+r+'"'+(r===curR?' class="active"':'')+'>Ronda '+r+' <span style="opacity:.7">· '+n+'</span></button>';
+  }).join('') + '</div>';
+
+  function renderRoundTable(r) {
+    var games = byRound[r] || [];
+    // Ordenar por board number si existe
+    games.sort(function(a,b){
+      var pa = t.players[a.w] || t.players[String(a.w)] || {};
+      var pb = t.players[b.w] || t.players[String(b.w)] || {};
+      return (pa.board||a.w) - (pb.board||b.w);
+    });
+    var rows = games.map(function(g, i){
+      var pW = t.players[g.w] || t.players[String(g.w)] || {n:'?',f:'?'};
+      var pB = t.players[g.b] || t.players[String(g.b)] || {n:'?',f:'?'};
+      var resStr = g.res === 1 ? '1 - 0' : g.res === 0 ? '0 - 1' : '½ - ½';
+      var wClass = g.res === 1 ? 'pos' : (g.res === 0 ? 'neg' : '');
+      var bClass = g.res === 0 ? 'pos' : (g.res === 1 ? 'neg' : '');
+      var wMine = isMyPlayer(pW) || (pW.tm && isMyTeam({team:pW.tm}));
+      var bMine = isMyPlayer(pB) || (pB.tm && isMyTeam({team:pB.tm}));
+      return '<tr'+(wMine||bMine ? ' class="mine"' : '')+'>'
+        + '<td class="c"><span class="rnd">'+(i+1)+'</span></td>'
+        + '<td class="r"><strong class="'+wClass+'">'+escapeHtml(pW.n)+'</strong>'+(pW.tm?' <span style="color:var(--text-subtle);font-size:11px">('+escapeHtml(pW.tm)+')</span>':'')+(pW.f?' '+badge('badge-fed',pW.f):'')+'</td>'
+        + '<td class="c"><span class="rnd">'+resStr+'</span></td>'
+        + '<td><strong class="'+bClass+'">'+escapeHtml(pB.n)+'</strong>'+(pB.tm?' <span style="color:var(--text-subtle);font-size:11px">('+escapeHtml(pB.tm)+')</span>':'')+(pB.f?' '+badge('badge-fed',pB.f):'')+'</td>'
+        + '</tr>';
+    }).join('');
+    return '<div class="tbl-card"><div class="tbl-tb"><h4>Ronda '+r+'</h4><span class="cnt">'+games.length+' partidas</span></div>'
+      + '<div class="tbl-sc"><table>'
+      + '<thead><tr><th class="c">#</th><th class="r">Blancas</th><th class="c">Resultado</th><th>Negras</th></tr></thead>'
+      + '<tbody>'+rows+'</tbody></table></div></div>';
+  }
+
+  pane.innerHTML = tabsHtml + '<div id="rd-tbl">' + renderRoundTable(curR) + '</div>';
+  pane.querySelectorAll('.round-tabs button').forEach(function(b){
+    b.addEventListener('click', function(){
+      var r = parseInt(b.dataset.r, 10);
+      pane.dataset.curR = String(r);
+      pane.querySelectorAll('.round-tabs button').forEach(function(x){ x.classList.toggle('active', x===b); });
+      document.getElementById('rd-tbl').innerHTML = renderRoundTable(r);
+    });
+  });
 }
 
 function renameTournament(tid) {
@@ -2574,6 +2791,13 @@ document.addEventListener('DOMContentLoaded', function() {
   crInput.addEventListener('keydown', function(e){
     if (e.key === 'Enter') { e.preventDefault(); handleCRFetch(); }
   });
+  // Enter en el input de nombre custom guarda el torneo directamente
+  var crNameEl = document.getElementById('cr-name');
+  if (crNameEl) {
+    crNameEl.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && crPending) { e.preventDefault(); saveCRTournament(); }
+    });
+  }
 
   updateFilters();
   renderSB();
