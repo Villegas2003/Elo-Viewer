@@ -730,6 +730,186 @@ const presetString = JSON.stringify(presetData);
     }
 
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+    /* ─────── Compact stats row (chip-like) ─────── */
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      align-items: center;
+    }
+    .stats-row .sx {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .stats-row .sx strong { font-size: 14px; color: var(--text-strong); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stats-row .sx.pos strong { color: var(--positive); }
+    .stats-row .sx.neg strong { color: var(--negative); }
+    .stats-row .sx + .sx { border-left: 1px solid var(--border); padding-left: 14px; margin-left: 4px; }
+
+    /* ─────── Tooltip ─────── */
+    [data-tip] { position: relative; cursor: help; border-bottom: 1px dotted var(--text-subtle); }
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text-strong);
+      color: var(--surface);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      max-width: 280px;
+      white-space: normal;
+      width: max-content;
+      max-width: min(280px, 90vw);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .12s ease;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      text-align: center;
+    }
+    [data-tip]:hover::after { opacity: 1; }
+
+    /* ─────── Inline icon button (small) ─────── */
+    .ico-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: 4px;
+      color: var(--text-subtle);
+      vertical-align: middle;
+      margin-left: 4px;
+      transition: color .12s ease, background .12s ease;
+    }
+    .ico-link:hover { color: var(--accent); background: var(--accent-soft); }
+
+    /* ─────── Highlighted row (mi jugador / mi equipo) ─────── */
+    tr.mine td { background: linear-gradient(90deg, var(--accent-soft), transparent 80%) !important; }
+    tr.mine strong { color: var(--accent); }
+    tr.mine td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+    .mine-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--accent);
+      color: white;
+      margin-left: 6px;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    /* ─────── Round tabs / round view ─────── */
+    .round-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .round-tabs button {
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: background .12s ease, color .12s ease;
+    }
+    .round-tabs button:hover { background: var(--surface-hover); color: var(--text-strong); }
+    .round-tabs button.active { background: var(--accent); color: white; }
+
+    /* ─────── View tabs (Standings / Por ronda / etc) ─────── */
+    .view-tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .view-tabs button {
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      margin-bottom: -1px;
+      transition: color .12s ease, border-color .12s ease;
+    }
+    .view-tabs button:hover { color: var(--text-strong); }
+    .view-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ─────── Settings panel cards ─────── */
+    .set-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .set-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .set-card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text-strong);
+    }
+    .set-card .help { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .set-card label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .set-card input, .set-card select {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+    }
+    .set-card .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ─────── Row fade-in animation ─────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .content > * { animation: fadeInUp .25s ease both; }
+
+    /* ─────── Mobile: horizontal scroll hint for tables ─────── */
+    @media (max-width: 768px) {
+      .tbl-sc { -webkit-overflow-scrolling: touch; }
+      .stats-row { padding: 8px 10px; gap: 4px; }
+      .stats-row .sx + .sx { border-left: none; padding-left: 10px; margin-left: 0; }
+      .stats-row .sx { padding: 3px 8px; font-size: 11px; }
+      .stats-row .sx strong { font-size: 13px; }
+      .round-tabs button { padding: 5px 9px; font-size: 11px; }
+      .view-tabs button { padding: 8px 11px; font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -846,8 +1026,15 @@ const presetString = JSON.stringify(presetData);
           <small id="sb-total">0 jugadores</small>
         </span>
       </button>
+      <button class="sb-item" id="nav-settings">
+        <span class="ic-w" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </span>
+        <span class="lbl">Configuración</span>
+      </button>
     </div>
     <div class="sb-sec">Torneos</div>
+    <div class="sb-search"><input type="search" id="sb-search" placeholder="Buscar torneo…" aria-label="Buscar torneo" /></div>
     <div class="sb-scroll" id="sb-t"></div>
     <button class="sb-add" id="sb-add">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1295,10 +1482,12 @@ function setActiveNav(v, tid) {
   var el;
   if(v==='dashboard') el=document.getElementById('nav-dashboard');
   else if(v==='players') el=document.getElementById('nav-players');
+  else if(v==='settings') el=document.getElementById('nav-settings');
   else if(v==='tournament'&&tid) el=document.getElementById('snav-'+tid);
   if(el){ el.classList.add('active'); el.setAttribute('aria-current', 'page'); }
 }
-function go(v, tid) {
+function go(v, tid, opts) {
+  opts = opts || {};
   CV=v; CT=tid||null;
   destroyCharts();
   setActiveNav(v, tid);
@@ -1310,6 +1499,9 @@ function go(v, tid) {
   } else if(v==='players'){
     document.getElementById('page-title').textContent='Todos los jugadores';
     renderPlayers();
+  } else if(v==='settings'){
+    document.getElementById('page-title').textContent='Configuración';
+    renderSettings();
   } else if(v==='tournament'){
     var t=ST.tournaments.filter(function(x){return x.id===tid;})[0];
     document.getElementById('page-title').textContent=t?t.name:'Torneo';
@@ -1317,7 +1509,136 @@ function go(v, tid) {
     // Background auto-refresh para torneos de chess-results
     if (t && t.source === 'chess-results') { setTimeout(function(){ maybeRefreshCR(tid); }, 200); }
   }
+  if (!opts.skipUrl) updateUrlHash();
   window.scrollTo(0,0);
+}
+
+// ═══════════════ URL HASH ROUTING ═══════════════
+function updateUrlHash() {
+  var h = '#' + CV;
+  if (CV === 'tournament' && CT) h += '/' + CT;
+  if (location.hash !== h) {
+    history.replaceState(null, '', h);
+  }
+}
+function parseUrlHash() {
+  var h = (location.hash || '').replace(/^#/, '');
+  if (!h) return null;
+  if (h.indexOf('tournament/') === 0) return { v: 'tournament', tid: h.slice('tournament/'.length) };
+  if (h === 'players' || h === 'dashboard' || h === 'settings') return { v: h, tid: null };
+  return null;
+}
+
+// ═══════════════ SETTINGS (mi jugador, mi equipo, fed default) ═══════════════
+var SET_KEY = 'chess_elo_settings';
+var SETTINGS = { myPlayer: '', myTeam: '', defaultFed: 'CRC' };
+function loadSettings() {
+  try {
+    var s = localStorage.getItem(SET_KEY);
+    if (s) {
+      var obj = JSON.parse(s);
+      SETTINGS.myPlayer = obj.myPlayer || '';
+      SETTINGS.myTeam = obj.myTeam || '';
+      SETTINGS.defaultFed = obj.defaultFed || 'CRC';
+    }
+  } catch(e) {}
+}
+function saveSettings() {
+  try { localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); } catch(e) {}
+}
+function isMyPlayer(p) {
+  if (!SETTINGS.myPlayer) return false;
+  return (p.n || '').toLowerCase().indexOf(SETTINGS.myPlayer.toLowerCase()) >= 0;
+}
+function isMyTeam(p) {
+  if (!SETTINGS.myTeam) return false;
+  return (p.team || p.tm || '').toLowerCase() === SETTINGS.myTeam.toLowerCase();
+}
+
+function renderSettings() {
+  var el = document.getElementById('main-content');
+  // Recolectar listas para autocomplete: nombres de jugadores y equipos únicos
+  var allPlayers = getPlayers();
+  var playerNames = {};
+  var teamNames = {};
+  var feds = {};
+  allPlayers.forEach(function(p){
+    if (p.n) playerNames[p.n] = 1;
+    if (p.team) teamNames[p.team] = 1;
+    if (p.f) feds[p.f] = 1;
+  });
+  var pNames = Object.keys(playerNames).sort();
+  var tNames = Object.keys(teamNames).sort();
+  var fNames = Object.keys(feds).sort();
+
+  el.innerHTML = '<div class="set-grid">'
+    + '<div class="set-card">'
+      + '<h4>Mi jugador</h4>'
+      + '<p class="help">Tu nombre se resaltará en todas las tablas. Coincidencia parcial (ej. "Villegas" encuentra "Villegas Rodriguez, Jeremy").</p>'
+      + '<label for="set-player">Nombre</label>'
+      + '<input type="text" id="set-player" list="set-player-list" placeholder="Tu nombre o parte de él" value="'+escapeHtml(SETTINGS.myPlayer)+'" />'
+      + '<datalist id="set-player-list">' + pNames.map(function(n){return '<option value="'+escapeHtml(n)+'">';}).join('') + '</datalist>'
+    + '</div>'
+    + '<div class="set-card">'
+      + '<h4>Mi equipo</h4>'
+      + '<p class="help">Filtros rápidos y resaltado en torneos por equipos.</p>'
+      + '<label for="set-team">Equipo</label>'
+      + '<input type="text" id="set-team" list="set-team-list" placeholder="Nombre del equipo" value="'+escapeHtml(SETTINGS.myTeam)+'" />'
+      + '<datalist id="set-team-list">' + tNames.map(function(n){return '<option value="'+escapeHtml(n)+'">';}).join('') + '</datalist>'
+    + '</div>'
+    + '<div class="set-card">'
+      + '<h4>Federación por defecto</h4>'
+      + '<p class="help">Federación pre-seleccionada en filtros de jugadores y torneos.</p>'
+      + '<label for="set-fed">País</label>'
+      + '<select id="set-fed"><option value="">— Ninguna —</option>'
+        + fNames.map(function(f){return '<option value="'+f+'"'+(f===SETTINGS.defaultFed?' selected':'')+'>'+f+'</option>';}).join('')
+      + '</select>'
+    + '</div>'
+    + '<div class="set-card">'
+      + '<h4>Tema</h4>'
+      + '<p class="help">Apariencia clara u oscura.</p>'
+      + '<div class="row-2">'
+        + '<button class="btn btn-g" id="set-theme-l">Claro</button>'
+        + '<button class="btn btn-g" id="set-theme-d">Oscuro</button>'
+      + '</div>'
+    + '</div>'
+    + '<div class="set-card">'
+      + '<h4>Datos</h4>'
+      + '<p class="help">Acciones avanzadas sobre tus torneos guardados.</p>'
+      + '<div class="row-2">'
+        + '<button class="btn btn-g" id="set-export-all">Exportar JSON</button>'
+        + '<button class="btn btn-g" id="set-clear" style="color:var(--negative)">Borrar todo</button>'
+      + '</div>'
+    + '</div>'
+    + '</div>';
+
+  function commitSettings() {
+    SETTINGS.myPlayer = (document.getElementById('set-player').value || '').trim();
+    SETTINGS.myTeam = (document.getElementById('set-team').value || '').trim();
+    SETTINGS.defaultFed = (document.getElementById('set-fed').value || '').trim();
+    saveSettings();
+  }
+  document.getElementById('set-player').addEventListener('input', commitSettings);
+  document.getElementById('set-team').addEventListener('input', commitSettings);
+  document.getElementById('set-fed').addEventListener('change', commitSettings);
+  document.getElementById('set-theme-l').addEventListener('click', function(){ applyTheme('light'); });
+  document.getElementById('set-theme-d').addEventListener('click', function(){ applyTheme('dark'); });
+  document.getElementById('set-export-all').addEventListener('click', function(){
+    var blob = new Blob([JSON.stringify(ST, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'chess-elo-data.json'; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    toast('success', 'Datos exportados');
+  });
+  document.getElementById('set-clear').addEventListener('click', function(){
+    if (!confirm('¿Borrar TODOS los torneos guardados? Esto no se puede deshacer.')) return;
+    ST.tournaments = [];
+    saveST();
+    renderSB();
+    go('dashboard');
+    toast('success', 'Datos borrados');
+  });
 }
 
 function trophySvg() {
@@ -1335,10 +1656,30 @@ function renderSB() {
     el.innerHTML='<div class="sb-empty">Sin torneos cargados</div>';
     return;
   }
-  el.innerHTML=ST.tournaments.map(function(t){
+  var searchEl = document.getElementById('sb-search');
+  var q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+  var list = ST.tournaments.filter(function(t){
+    if (!q) return true;
+    return (t.name||'').toLowerCase().indexOf(q) >= 0
+      || (t.category||'').toLowerCase().indexOf(q) >= 0
+      || String(t.year||'').indexOf(q) >= 0
+      || (t.location||'').toLowerCase().indexOf(q) >= 0;
+  });
+  if (!list.length) {
+    el.innerHTML='<div class="sb-empty">Sin coincidencias</div>';
+    return;
+  }
+  el.innerHTML=list.map(function(t){
+    var kindBadge = t.kind === 'teams'
+      ? '<span class="mini-badge kind-t">Equipos</span>'
+      : '<span class="mini-badge kind-i">Individual</span>';
+    var catBadge = t.category ? '<span class="mini-badge">'+escapeHtml(t.category)+'</span>' : '';
+    var yearBadge = t.year ? '<span class="mini-badge">'+escapeHtml(String(t.year))+'</span>' : '';
     return '<button class="sb-item'+(CV==='tournament'&&CT===t.id?' active':'')+'" id="snav-'+t.id+'" data-tid="'+t.id+'">'
       +'<span class="ic-w" aria-hidden="true">'+trophySvg()+'</span>'
-      +'<span class="lbl">'+escapeHtml(t.name)+'<small>'+escapeHtml(((t.category||'')+' '+(t.year||'')).trim() || '—')+'</small></span>'
+      +'<span class="lbl">'+escapeHtml(t.name)
+        +'<span class="lbl-badges">'+kindBadge+catBadge+yearBadge+'</span>'
+      +'</span>'
       +'<span class="del" data-del="'+t.id+'" role="button" aria-label="Eliminar torneo">'+trashSvg()+'</span>'
       +'</button>';
   }).join('');
@@ -1913,6 +2254,7 @@ function applyTheme(t) {
   try { localStorage.setItem(TH_KEY, t); } catch(e){}
   if(CV==='dashboard') renderDashboard();
   else if(CV==='players') renderPlayers();
+  else if(CV==='settings') renderSettings();
   else if(CV==='tournament' && CT) renderTournament(CT);
 }
 function toggleTheme() {
@@ -2167,6 +2509,7 @@ async function manualRefreshCR(tournamentId) {
 
 document.addEventListener('DOMContentLoaded', function() {
   loadST();
+  loadSettings();
   applySb();
   var initialTheme = document.documentElement.getAttribute('data-theme')||'light';
   document.getElementById('theme-sun').style.display = initialTheme==='dark' ? 'block' : 'none';
@@ -2179,6 +2522,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('nav-dashboard').addEventListener('click',function(){go('dashboard');});
   document.getElementById('nav-players').addEventListener('click',function(){go('players');});
+  document.getElementById('nav-settings').addEventListener('click',function(){go('settings');});
+  var sbSearch = document.getElementById('sb-search');
+  if (sbSearch) sbSearch.addEventListener('input', renderSB);
   document.getElementById('sb-add').addEventListener('click',openModal);
   document.getElementById('tb-toggle').addEventListener('click', toggleSb);
   document.getElementById('tb-menu').addEventListener('click', openMobileSb);
@@ -2231,7 +2577,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
   updateFilters();
   renderSB();
-  go('dashboard');
+  // URL hash routing: si hay hash, ir a esa vista; sino dashboard
+  var initRoute = parseUrlHash();
+  if (initRoute) {
+    if (initRoute.v === 'tournament' && !ST.tournaments.some(function(x){return x.id===initRoute.tid;})) {
+      go('dashboard');
+    } else {
+      go(initRoute.v, initRoute.tid);
+    }
+  } else {
+    go('dashboard');
+  }
+  // Sincronizar back/forward del navegador con la navegación interna
+  window.addEventListener('hashchange', function(){
+    var r = parseUrlHash();
+    if (!r) { go('dashboard', null, { skipUrl: true }); return; }
+    if (r.v === 'tournament' && !ST.tournaments.some(function(x){return x.id===r.tid;})) return;
+    if (r.v !== CV || (r.v === 'tournament' && r.tid !== CT)) {
+      go(r.v, r.tid, { skipUrl: true });
+    }
+  });
 });
 </script>
 
